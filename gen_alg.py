@@ -35,7 +35,7 @@ toolbox.register("populationCreator", tools.initRepeat, list, toolbox.individual
 population = toolbox.populationCreator(n = POPULATION_SIZE)
 
 
-def getScore(individual):
+def get_score(individual):
     game_model1.set_weights(change_weights(individual))
 
     pole = TicTacToe()
@@ -43,7 +43,7 @@ def getScore(individual):
     return reward,
 
 
-toolbox.register("evaluate", getScore)
+toolbox.register("evaluate", get_score)
 toolbox.register("select", tools.selTournament, tournsize = 3)
 toolbox.register("mate", tools.cxSimulatedBinaryBounded, low = LOW, up = UP, eta = ETA)
 toolbox.register("mutate", tools.mutPolynomialBounded, low = LOW, up = UP, eta = ETA, indpb = 1.0 / LENGTH_CHROM)
