@@ -22,7 +22,7 @@ ETA = 22
 POPULATION_SIZE = 56  # количество индивидуумов в популяции
 P_CROSSOVER = 0.9  # вероятность скрещивания
 P_MUTATION = 0.15  # вероятность мутации индивидуума
-MAX_GENERATIONS = 1  # максимальное количество поколений
+MAX_GENERATIONS = 46  # максимальное количество поколений
 HALL_OF_FAME_SIZE = 3
 
 hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
