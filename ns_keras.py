@@ -23,11 +23,11 @@ def change_weights(raw_w: list):
 neir_c_1lvl = 50
 
 game_model1 = Sequential([Input((3, 3)),
-                          GRU(neir_c_1lvl),
+                          GRU(neir_c_1lvl, activation = "relu"),
                           Dense(9, activation = 'softmax')])
 
 game_model2 = Sequential([Input((3, 3)),
-                          GRU(neir_c_1lvl),
+                          GRU(neir_c_1lvl, activation = "relu"),
                           Dense(9, activation = 'softmax')])
 
 game_model1.build(9)
@@ -38,5 +38,5 @@ game_model2.build(9)
 # game_model1.summary()
 
 save_model = Sequential([Input((3, 3)),
-                         GRU(neir_c_1lvl),
+                         GRU(neir_c_1lvl, activation = "relu"),
                          Dense(9, activation = 'softmax')])
