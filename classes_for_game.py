@@ -153,7 +153,8 @@ class TicTacToe:
         """test play with nc"""
         while self:
             i1, j1 = self.__help_for_predict(nc)
-            self[i1, j1] = self.FIRST_NC
+            if self[i1, j1] == self.FREE_CELL:
+                self[i1, j1] = self.FIRST_NC
             print(f"xod nc - ({i1}, {j1})")
             self.show()
             if not self:
