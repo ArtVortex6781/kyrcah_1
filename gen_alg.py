@@ -75,4 +75,4 @@ plt.title('Зависимость максимальной и средней п�
 plt.show()
 
 save_model.set_weights(change_weights(best))
-save_model.save("modelv6_3igr.keras")
+save_model.save(r"models\modelv6_3igr.keras")
