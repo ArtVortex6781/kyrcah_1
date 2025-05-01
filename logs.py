@@ -1,47 +1,67 @@
 import sqlite3 as sq
 
 
-class AllLogs:
-    """class for working with all log tables, the Singeton"""
+class WorkWithDB:
+    """The main class where the database is connected and closed, etc.,
+    The class also implements the Singleton и the class is also a contextual manager"""
     __obj = None
 
     def __new__(cls, *args, **kwargs):
+        """Singleton and start connect to db"""
         if cls.__obj is None:
-            cls.__obj = super().__new__(cls)
+            cls.__obj = object.__new__(cls)
+            try:
+                cls.__obj.con = sq.connect("database_logs/db1.db")
+                cls.__obj.cur = cls.__obj.con.cursor()
+            except sq.Error as e:
+                print("error connect with db")
+                raise e
         return cls.__obj
 
-    def __init__(self):
-        """init connect to database"""
+    def __enter__(self):
+        """return self object"""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """commit and close db or rollback and close the connection and del object who work"""
         try:
-            self._ocn_con = sq.connect("database_logs/db1.db")
-            self._ocn_cur = self._ocn_con.cursor()
-        except sq.Error as e:
-            print("error work with db")
-            raise e
+            if exc_type:
+                self.con.rollback()
+            else:
+                self.con.commit()
+        finally:
+            self.con.close()
+            self.__class__.__obj = None
 
     def close_connection(self):
+        """close connection"""
         try:
-            self._ocn_con.commit()
+            self.con.commit()
         except sq.Error as e:
-            if self._ocn_con:
-                self._ocn_con.rollback()
+            if self.con:
+                self.con.rollback()
             print(e, "error close")
         finally:
-            if self._ocn_con:
-                self._ocn_con.close()
+            if self.con:
+                self.con.close()
 
-    def reset_table_runs(self):
+
+class ResetTables:
+
+    @staticmethod
+    def reset_table_runs(obj_db: WorkWithDB):
+        """reset or create table runs"""
         try:
-            self._ocn_cur.executescript("""
+            obj_db.cur.executescript("""
             BEGIN;
-            DROP TABLE IF EXIST runs;
+            DROP TABLE IF EXISTS runs;
             CREATE TABLE IF NOT EXISTS runs (
             run_id INTEGER PRIMARY KEY AUTOINCREMENT,
             time_run TEXT,
-            seed INTEGER,
+            seed INTEGER
             )
             """)
-            self._ocn_con.commit()
+            obj_db.con.commit()
         except sq.Error:
-            if self._ocn_con:
-                self._ocn_con.rollback()
+            if obj_db.con:
+                obj_db.con.rollback()
