@@ -98,6 +98,7 @@ class ResetTables:
             {cls.__tables[name_table]};
             """)
             obj_db.con.commit()
-        except sq.Error:
+        except sq.Error as e:
             if obj_db.con:
                 obj_db.con.rollback()
+            print(f"Error creating table {name_table}: {e}")
