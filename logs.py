@@ -42,6 +42,7 @@ class WorkWithDB:
 
 
 class ResetTables:
+    """ reset or create tables and similar actions with tables, that is, here is the structure of tabels"""
     __tables = {"runs": """CREATE TABLE IF NOT EXISTS runs (
             run_id INTEGER PRIMARY KEY AUTOINCREMENT,
             time_run TEXT,
@@ -102,3 +103,13 @@ class ResetTables:
             if obj_db.con:
                 obj_db.con.rollback()
             print(f"Error creating table {name_table}: {e}")
+
+
+class RecordingInTable:
+    """ writing data to tables """
+    pass
+
+
+class ReadDataTables:
+    """ read data from tables"""
+    pass
