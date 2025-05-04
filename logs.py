@@ -52,7 +52,9 @@ class WorkWithDB:
             def wrapper(arg1, arg2, *args, **kwargs) -> object:
                 db = arg2 if isinstance(arg2, WorkWithDB) else arg1
                 try:
-                    return func(arg1, arg2, *args, **kwargs)
+                    res = func(arg1, arg2, *args, **kwargs)
+                    db.con.commit()
+                    return res
                 except sq.Error as e:
                     db.con.rollback()
                     db.__exit__(e.__class__, e, e.__traceback__)
