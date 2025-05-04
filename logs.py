@@ -176,6 +176,67 @@ class RecordingInTable:
     def insert_run(obj_db: WorkWithDB, time_run: str, seed: int) -> int:
         """Adds a record to Runs and returns the ID of that record"""
         obj_db.cur.execute("INSERT INTO runs (time_run, seed) VALUES (?, ?)", (time_run, seed))
+        return obj_db.cur.lastrowid
+
+    @staticmethod
+    def insert_generation(obj_db: WorkWithDB, run_id: int, population_size: int, p_crossover: float, p_mutation: float,
+                          low: float, up: float, eta: float, generations: int, fame_size: int) -> int:
+        """ Adds a record to generations and returns the new ga_id """
+        obj_db.cur.execute(
+            """INSERT INTO generations
+               (run_id, population_size, p_crossover, p_mutation, low, up, eta, generations, fame_size)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (run_id, population_size, p_crossover, p_mutation, low, up, eta, generations, fame_size)
+        )
+        return obj_db.cur.lastrowid
+
+    @staticmethod
+    def insert_model_config(obj_db: WorkWithDB, run_id: int, gru_units: int, gru_activation: str) -> int:
+        """ Adds a record to model_configs and returns the new config_id """
+        obj_db.cur.execute(
+            "INSERT INTO model_configs (run_id, gru_units, gru_activation) VALUES (?, ?, ?)",
+            (run_id, gru_units, gru_activation)
+        )
+        return obj_db.cur.lastrowid
+
+    @staticmethod
+    def insert_generation_stats(obj_db: WorkWithDB, gen_id: int, config_id: int, fitness_max: float, fitness_avg: float,
+                                fitness_min: float, fitness_std: float) -> int:
+        """ Adds a record to generation_stats and returns the new stat_id """
+        obj_db.cur.execute(
+            """INSERT INTO generation_stats
+               (gen_id, config_id, fitness_max, fitness_avg, fitness_min, fitness_std)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (gen_id, config_id, fitness_max, fitness_avg, fitness_min, fitness_std)
+        )
+        return obj_db.cur.lastrowid
+
+    @staticmethod
+    def insert_hall_of_fame(obj_db: WorkWithDB, gen_id: int, config_id: int, fitness: float, chromosome: str) -> int:
+        """ Adds a record to hall_of_fame and returns the new hof_id """
+        obj_db.cur.execute(
+            "INSERT INTO hall_of_fame (gen_id, config_id, fitness, chromosome) VALUES (?, ?, ?, ?)",
+            (gen_id, config_id, fitness, chromosome)
+        )
+        return obj_db.cur.lastrowid
+
+    @staticmethod
+    def insert_game(obj_db: WorkWithDB, run_id: int, result: str, moves: int, timestamp: str) -> int:
+        """ Adds a record to games and returns the new game_id """
+        obj_db.cur.execute(
+            "INSERT INTO games (run_id, result, moves, timestamp) VALUES (?, ?, ?, ?)",
+            (run_id, result, moves, timestamp)
+        )
+        return obj_db.cur.lastrowid
+
+    @staticmethod
+    def insert_error(obj_db: WorkWithDB, run_id: int | None, timestamp: str, error_message: str, traceback: str) -> int:
+        """ Adds a record to errors and returns the new error_id """
+        obj_db.cur.execute(
+            "INSERT INTO errors (run_id, timestamp, error_message, traceback) VALUES (?, ?, ?, ?)",
+            (run_id, timestamp, error_message, traceback)
+        )
+        return obj_db.cur.lastrowid
 
 
 @WorkWithDB.try_work_decor
