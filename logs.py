@@ -1,4 +1,6 @@
 import sqlite3 as sq
+from typing import Callable
+from functools import wraps
 
 
 class WorkWithDB:
@@ -40,7 +42,31 @@ class WorkWithDB:
         else:
             print("Соединение уже закрыто")
 
+    @staticmethod
+    def try_work_decor(cls: object) -> object:
+        """ A basic decorator that applies to a class and decorates all functions without __ to work with exceptions
+        :param cls: class to be decorated
+        """
+        def decorator(func: Callable) -> Callable:
+            @wraps(func)
+            def wrapper(arg1, arg2, *args, **kwargs) -> object:
+                db = arg2 if isinstance(arg2, WorkWithDB) else arg1
+                try:
+                    return func(arg1, arg2, *args, **kwargs)
+                except sq.Error as e:
+                    db.con.rollback()
+                    db.__exit__(e.__class__, e, e.__traceback__)
 
+            return wrapper
+
+        for name, func in cls.__dict__.items():
+            if not name.startswith("__") and callable(func):
+                setattr(cls, name, decorator(func))
+
+        return cls
+
+
+@WorkWithDB.try_work_decor
 class ResetTables:
     """ reset or create tables and similar actions with tables, that is, here is the structure of tabels"""
     __tables = {"runs": """CREATE TABLE IF NOT EXISTS runs (
@@ -81,7 +107,21 @@ class ResetTables:
             config_id INTEGER,
             fitness REAL,
             chromosome TEXT
-            )"""}
+            )""",
+                "games": """ CREATE TABLE IF NOT EXISTS games (
+                game_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id INTEGER,
+                result TEXT,
+                moves INTEGER,
+                timestamp TEXT
+                )""",
+                "errors": """ CREATE TABLE IF NOT EXISTS errors (
+                error_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id INTEGER,
+                timestamp TEXT,
+                error_message TEXT,
+                traceback TEXT
+                )"""}
 
     @classmethod
     def reset_or_create_tables(cls, obj_db: WorkWithDB, name_table: str):
@@ -92,24 +132,32 @@ class ResetTables:
         if name_table not in cls.__tables:
             print("Нету такой таблицы")
             return
-        try:
-            obj_db.cur.executescript(f"""
+        obj_db.cur.executescript(f"""
             BEGIN;
             DROP TABLE IF EXISTS {name_table};
             {cls.__tables[name_table]};
             """)
-            obj_db.con.commit()
-        except sq.Error as e:
-            if obj_db.con:
-                obj_db.con.rollback()
-            print(f"Error creating table {name_table}: {e}")
+        obj_db.con.commit()
+
+    @classmethod
+    def reset_all_tables(cls, obj_db: WorkWithDB):
+        """reset and create the tables that are valid and available in the class"""
+        for table in cls.__tables:
+            cls.reset_or_create_tables(obj_db, table)
 
 
+@WorkWithDB.try_work_decor
 class RecordingInTable:
     """ writing data to tables """
-    pass
+
+    @staticmethod
+    def insert_run(obj_db: WorkWithDB, time_run: str, seed: int) -> int:
+        "Adds a record to Runs and returns the ID of that record"
+        obj_db.cur.execute(f"INSERT INTO runs (time_run, seed) VALUES ({time_run}, {seed})")
 
 
 class ReadDataTables:
     """ read data from tables"""
     pass
+
+
