@@ -3,6 +3,7 @@ import sqlite3 as sq
 from typing import Callable
 from functools import wraps
 from types import FunctionType
+from datetime import datetime
 
 
 class WorkWithDB:
@@ -66,6 +67,14 @@ class WorkWithDB:
                     return res
                 except sq.Error as e:
                     db.con.rollback()
+                    run_id = getattr(db, "current_run_id", None)
+                    try:
+                        db.cur.execute(
+                            "INSERT INTO errors(run_id, timestamp, error_message, traceback) VALUES(?, ?, ?, ?)",
+                            (run_id, datetime.now().isoformat(), str(e), repr(e.__traceback__)))
+                        db.con.commit()
+                    except Exception:
+                        print("Failed to log error:", e)
                     db.__exit__(e.__class__, e, e.__traceback__)
 
             return wrapper
@@ -176,6 +185,8 @@ class RecordingInTable:
     def insert_run(obj_db: WorkWithDB, time_run: str, seed: int) -> int:
         """Adds a record to Runs and returns the ID of that record"""
         obj_db.cur.execute("INSERT INTO runs (time_run, seed) VALUES (?, ?)", (time_run, seed))
+
+        obj_db.current_run_id = obj_db.cur.lastrowid
         return obj_db.cur.lastrowid
 
     @staticmethod
