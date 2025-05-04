@@ -72,7 +72,6 @@ class WorkWithDB:
                         db.cur.execute(
                             "INSERT INTO errors(run_id, timestamp, error_message, traceback) VALUES(?, ?, ?, ?)",
                             (run_id, datetime.now().isoformat(), str(e), repr(e.__traceback__)))
-                        db.con.commit()
                     except Exception:
                         print("Failed to log error:", e)
                     db.__exit__(e.__class__, e, e.__traceback__)
