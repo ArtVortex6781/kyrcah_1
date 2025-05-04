@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sqlite3 as sq
 from typing import Callable
 from functools import wraps
@@ -43,10 +44,11 @@ class WorkWithDB:
             print("Соединение уже закрыто")
 
     @staticmethod
-    def try_work_decor(cls: object) -> object:
+    def try_work_decor(cls):
         """ A basic decorator that applies to a class and decorates all functions without __ to work with exceptions
         :param cls: class to be decorated
         """
+
         def decorator(func: Callable) -> Callable:
             @wraps(func)
             def wrapper(arg1, arg2, *args, **kwargs) -> object:
@@ -61,9 +63,9 @@ class WorkWithDB:
 
             return wrapper
 
-        for name, func in cls.__dict__.items():
-            if not name.startswith("__") and callable(func):
-                setattr(cls, name, decorator(func))
+        for name, fnc in cls.__dict__.items():
+            if not name.startswith("__") and callable(fnc):
+                setattr(cls, name, decorator(fnc))
 
         return cls
 
@@ -154,10 +156,11 @@ class RecordingInTable:
 
     @staticmethod
     def insert_run(obj_db: WorkWithDB, time_run: str, seed: int) -> int:
-        "Adds a record to Runs and returns the ID of that record"
+        """Adds a record to Runs and returns the ID of that record"""
         obj_db.cur.execute(f"INSERT INTO runs (time_run, seed) VALUES ({time_run}, {seed})")
 
 
+@WorkWithDB.try_work_decor
 class ReadDataTables:
     """ read data from tables"""
     pass
