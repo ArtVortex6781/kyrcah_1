@@ -2,6 +2,7 @@ from __future__ import annotations
 import sqlite3 as sq
 from typing import Callable
 from functools import wraps
+from types import FunctionType
 
 
 class WorkWithDB:
@@ -51,10 +52,16 @@ class WorkWithDB:
 
         def decorator(func: Callable) -> Callable:
             @wraps(func)
-            def wrapper(arg1, arg2, *args, **kwargs) -> object:
-                db = arg2 if isinstance(arg2, WorkWithDB) else arg1
+            def wrapper(*args, **kwargs) -> object:
+                db = None
+                for arg in args:
+                    if isinstance(arg, WorkWithDB):
+                        db = arg
+                        break
+                if db is None:
+                    raise ValueError("WorkWithDB instance not found among arguments")
                 try:
-                    res = func(arg1, arg2, *args, **kwargs)
+                    res = func(*args, **kwargs)
                     db.con.commit()
                     return res
                 except sq.Error as e:
@@ -64,7 +71,19 @@ class WorkWithDB:
             return wrapper
 
         for name, fnc in cls.__dict__.items():
-            if not name.startswith("__") and callable(fnc):
+            if name.startswith("__"):
+                continue
+            elif isinstance(fnc, classmethod):
+                original_func = fnc.__func__
+                wrapped_func = decorator(original_func)
+                setattr(cls, name, classmethod(wrapped_func))
+
+            elif isinstance(fnc, staticmethod):
+                original_func = fnc.__func__
+                wrapped_func = decorator(original_func)
+                setattr(cls, name, staticmethod(wrapped_func))
+
+            elif isinstance(fnc, FunctionType):
                 setattr(cls, name, decorator(fnc))
 
         return cls
@@ -141,7 +160,6 @@ class ResetTables:
             DROP TABLE IF EXISTS {name_table};
             {cls.__tables[name_table]};
             """)
-        obj_db.con.commit()
 
     @classmethod
     def reset_all_tables(cls, obj_db: WorkWithDB):
@@ -157,12 +175,10 @@ class RecordingInTable:
     @staticmethod
     def insert_run(obj_db: WorkWithDB, time_run: str, seed: int) -> int:
         """Adds a record to Runs and returns the ID of that record"""
-        obj_db.cur.execute(f"INSERT INTO runs (time_run, seed) VALUES ({time_run}, {seed})")
+        obj_db.cur.execute("INSERT INTO runs (time_run, seed) VALUES (?, ?)", (time_run, seed))
 
 
 @WorkWithDB.try_work_decor
 class ReadDataTables:
     """ read data from tables"""
     pass
-
-
