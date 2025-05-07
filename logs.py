@@ -29,6 +29,9 @@ class WorkWithDB:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """commit and close db or rollback and close the connection and del object who work"""
+        if not hasattr(self, "con") or not self.con or type(self)._instance is None:
+            print("Соединение уже закрыто")
+            return
         try:
             if exc_type:
                 self.con.rollback()
@@ -60,20 +63,21 @@ class WorkWithDB:
                         db = arg
                         break
                 if db is None:
-                    raise ValueError("WorkWithDB instance not found among arguments")
+                    raise ValueError("WorkWithDB экземпляр не найден среди аргументов")
                 try:
                     res = func(*args, **kwargs)
                     db.con.commit()
                     return res
                 except sq.Error as e:
                     db.con.rollback()
-                    run_id = getattr(db, "current_run_id", None)
+                    run_id = getattr(db.cur, "lastrowid", None)
                     try:
                         db.cur.execute(
-                            "INSERT INTO errors(run_id, timestamp, error_message, traceback) VALUES(?, ?, ?, ?)",
+                            "INSERT INTO errors (run_id, timestamp, error_message, traceback) VALUES (?, ?, ?, ?)",
                             (run_id, datetime.now().isoformat(), str(e), repr(e.__traceback__)))
-                    except Exception:
-                        print("Failed to log error:", e)
+                        db.con.commit()
+                    except BaseException as all_e:
+                        print("Failed to log error:", all_e)
                     db.__exit__(e.__class__, e, e.__traceback__)
 
             return wrapper
@@ -252,4 +256,91 @@ class RecordingInTable:
 @WorkWithDB.try_work_decor
 class ReadDataTables:
     """ read data from tables"""
-    pass
+
+    @staticmethod
+    def fetch_all_runs(obj_db: WorkWithDB) -> list[tuple]:
+        """ return a list of all launches (runs): - run_id, time_run, seed """
+
+        return obj_db.cur.execute("""
+        SELECT * FROM runs
+        """).fetchall()
+
+    @staticmethod
+    def fetch_generations_for_run(obj_db: WorkWithDB, run_id: int) -> list[tuple]:
+        """ Return all records from generations for this run_id:
+        ga_id, run_id, population_size, p_crossover, p_mutation, low, up, eta, generations, fame_size """
+
+        return obj_db.cur.execute("""
+        SELECT * FROM generations
+        WHERE run_id == ?
+        """, (run_id,)).fetchall()
+
+    @staticmethod
+    def fetch_model_configs_for_run(obj_db: WorkWithDB, run_id: int) -> list[tuple]:
+        """ Return all model configurations (model_configs) for this run_id:
+        config_id, run_id, gru_units, gru_activation
+        """
+
+        return obj_db.cur.execute("""
+        SELECT * FROM model_configs
+        WHERE run_id == ?
+        """, (run_id,)).fetchall()
+
+    @staticmethod
+    def fetch_generation_stats(obj_db: WorkWithDB, gen_id: int) -> list[tuple]:
+        """ Return Generation Statistics (generation_stats) for this gen_id:
+        stat_id, gen_id, config_id, fitness_max, fitness_avg, fitness_min, fitness_std
+        """
+
+        return obj_db.cur.execute("""
+        SELECT * FROM generation_stats
+        WHERE gen_id == ?
+        """, (gen_id,)).fetchall()
+
+    @staticmethod
+    def fetch_hall_of_fame(obj_db: WorkWithDB, gen_id: int) -> list[tuple]:
+        """ Return the Hall of Fame (hall_of_fame) for this gen_id:
+         hof_id, gen_id, config_id, fitness, chromosome
+        """
+
+        return obj_db.cur.execute("""
+        SELECT * FROM hall_of_fame
+        WHERE gen_id == ?
+        """, (gen_id,)).fetchall()
+
+    @staticmethod
+    def fetch_games_for_run(obj_db: WorkWithDB, run_id: int) -> list[tuple]:
+        """ return the results of the games for the run_id:
+        game_id, run_id, result, moves, timestamp
+        """
+
+        return obj_db.cur.execute("""
+        SELECT * FROM games
+        WHERE run_id == ?
+        """, (run_id,)).fetchall()
+
+    @staticmethod
+    def fetch_errors_for_run(obj_db: WorkWithDB, run_id: int) -> list[tuple]:
+        """return errors for this run_id:
+        - error_id, run_id, timestamp, error_message, traceback
+        """
+
+        return obj_db.cur.execute("""
+        SELECT * FROM errors
+        WHERE run_id == ?
+        """, (run_id,)).fetchall()
+
+    @staticmethod
+    def summary_fitness_trend(obj_db: WorkWithDB, run_id: int) -> list[dict]:
+        """ for each generation of a given run_id return:
+        - generations.ga_id,
+        - generations.generations (generation number),
+        - generation_stats.fitness_max,
+        - generation_stats.fitness_avg
+        """
+        return obj_db.cur.execute("""
+        SELECT generations.ga_id, generations.generations, generation_stats.fitness_max, generation_stats.fitness_avg
+        FROM generations
+        JOIN generation_stats ON generations.run_id = generation_stats.run_id
+        WHERE generations.run_id == ?
+        """, (run_id,)).fetchall()
