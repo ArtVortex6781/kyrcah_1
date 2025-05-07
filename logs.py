@@ -274,94 +274,94 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_all_runs(obj_db: WorkWithDB) -> list[dict]:
+    def fetch_all_runs(obj_db: WorkWithDB) -> sq.Cursor:
         """ return a list of all launches (runs): - run_id, time_run, seed """
 
-        obj_db.cur.execute("""
+        return obj_db.cur.execute("""
         SELECT * FROM runs
         """)
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_generations_for_run(obj_db: WorkWithDB, run_id: int) -> list[tuple]:
+    def fetch_generations_for_run(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
         """ Return all records from generations for this run_id:
         ga_id, run_id, population_size, p_crossover, p_mutation, low, up, eta, generations, fame_size """
 
-        obj_db.cur.execute("""
+        return obj_db.cur.execute("""
         SELECT * FROM generations
         WHERE run_id == ?
         """, (run_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_model_configs_for_run(obj_db: WorkWithDB, run_id: int) -> list[tuple]:
+    def fetch_model_configs_for_run(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
         """ Return all model configurations (model_configs) for this run_id:
         config_id, run_id, gru_units, gru_activation
         """
 
-        obj_db.cur.execute("""
+        return obj_db.cur.execute("""
         SELECT * FROM model_configs
         WHERE run_id == ?
         """, (run_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_generation_stats(obj_db: WorkWithDB, gen_id: int) -> list[tuple]:
+    def fetch_generation_stats(obj_db: WorkWithDB, gen_id: int) -> sq.Cursor:
         """ Return Generation Statistics (generation_stats) for this gen_id:
         stat_id, gen_id, config_id, fitness_max, fitness_avg, fitness_min, fitness_std
         """
 
-        obj_db.cur.execute("""
+        return obj_db.cur.execute("""
         SELECT * FROM generation_stats
         WHERE gen_id == ?
         """, (gen_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_hall_of_fame(obj_db: WorkWithDB, gen_id: int) -> list[tuple]:
+    def fetch_hall_of_fame(obj_db: WorkWithDB, gen_id: int) -> sq.Cursor:
         """ Return the Hall of Fame (hall_of_fame) for this gen_id:
          hof_id, gen_id, config_id, fitness, chromosome
         """
 
-        obj_db.cur.execute("""
+        return obj_db.cur.execute("""
         SELECT * FROM hall_of_fame
         WHERE gen_id == ?
         """, (gen_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_games_for_run(obj_db: WorkWithDB, run_id: int) -> list[tuple]:
+    def fetch_games_for_run(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
         """ return the results of the games for the run_id:
         game_id, run_id, result, moves, timestamp
         """
 
-        obj_db.cur.execute("""
+        return obj_db.cur.execute("""
         SELECT * FROM games
         WHERE run_id == ?
         """, (run_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_errors_for_run(obj_db: WorkWithDB, run_id: int) -> list[tuple]:
+    def fetch_errors_for_run(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
         """return errors for this run_id:
         - error_id, run_id, timestamp, error_message, traceback
         """
 
-        obj_db.cur.execute("""
+        return obj_db.cur.execute("""
         SELECT * FROM errors
         WHERE run_id == ?
         """, (run_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def summary_fitness_trend(obj_db: WorkWithDB, run_id: int) -> list[dict]:
+    def summary_fitness_trend(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
         """ for each generation of a given run_id return:
         - generations.ga_id,
         - generations.generations (generation number),
         - generation_stats.fitness_max,
         - generation_stats.fitness_avg
         """
-        obj_db.cur.execute("""
+        return obj_db.cur.execute("""
         SELECT generations.ga_id, generations.generations, generation_stats.fitness_max, generation_stats.fitness_avg
         FROM generations
         JOIN generation_stats ON generations.ga_id = generation_stats.gen_id
