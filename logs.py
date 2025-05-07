@@ -43,7 +43,7 @@ class WorkWithDB:
 
     def close_connection(self):
         """ run exit if you have connection """
-        if hasattr(self, "con") and self.con:
+        if hasattr(self, "con") and self.con and type(self)._instance is not None:
             self.__exit__(None, None, None)
         else:
             print("Соединение уже закрыто")
@@ -70,15 +70,16 @@ class WorkWithDB:
                     return res
                 except sq.Error as e:
                     db.con.rollback()
-                    run_id = getattr(db.cur, "lastrowid", None)
                     try:
                         db.cur.execute(
                             "INSERT INTO errors (run_id, timestamp, error_message, traceback) VALUES (?, ?, ?, ?)",
-                            (run_id, datetime.now().isoformat(), str(e), repr(e.__traceback__)))
+                            (getattr(db.cur, "current_run_id", None), datetime.now().isoformat(), str(e), repr(e.__traceback__)))
                         db.con.commit()
                     except Exception as all_e:
                         print("Failed to log error:", all_e)
+                        raise
                     db.__exit__(e.__class__, e, e.__traceback__)
+                    raise e
 
             return wrapper
 
