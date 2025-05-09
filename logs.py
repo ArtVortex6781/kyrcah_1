@@ -107,12 +107,14 @@ class WorkWithDB:
         """ A decorator for methods that perform select queries.
         func returns an SQ instance. Cursor a wrapper transforms the data into a more readable form.
         """
+
         @wraps(func)
         def wrapper(*args, **kwargs) -> list[dict]:
             cur: sq.Cursor = func(*args, **kwargs)
             rows = cur.fetchall()
             cols = [col[0] for col in cur.description]
             return [dict(zip(cols, row)) for row in rows]
+
         return wrapper
 
 
@@ -274,7 +276,7 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_all_runs(obj_db: WorkWithDB) -> sq.Cursor:
+    def fetch_all_runs(obj_db: WorkWithDB):
         """ return a list of all launches (runs): - run_id, time_run, seed """
 
         return obj_db.cur.execute("""
@@ -283,7 +285,7 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_generations_for_run(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+    def fetch_generations_for_run(obj_db: WorkWithDB, run_id: int):
         """ Return all records from generations for this run_id:
         ga_id, run_id, population_size, p_crossover, p_mutation, low, up, eta, generations, fame_size """
 
@@ -294,7 +296,7 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_model_configs_for_run(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+    def fetch_model_configs_for_run(obj_db: WorkWithDB, run_id: int):
         """ Return all model configurations (model_configs) for this run_id:
         config_id, run_id, gru_units, gru_activation
         """
@@ -306,7 +308,7 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_generation_stats(obj_db: WorkWithDB, gen_id: int) -> sq.Cursor:
+    def fetch_generation_stats(obj_db: WorkWithDB, gen_id: int):
         """ Return Generation Statistics (generation_stats) for this gen_id:
         stat_id, gen_id, config_id, fitness_max, fitness_avg, fitness_min, fitness_std
         """
@@ -318,7 +320,7 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_hall_of_fame(obj_db: WorkWithDB, gen_id: int) -> sq.Cursor:
+    def fetch_hall_of_fame(obj_db: WorkWithDB, gen_id: int):
         """ Return the Hall of Fame (hall_of_fame) for this gen_id:
          hof_id, gen_id, config_id, fitness, chromosome
         """
@@ -330,7 +332,7 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_games_for_run(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+    def fetch_games_for_run(obj_db: WorkWithDB, run_id: int):
         """ return the results of the games for the run_id:
         game_id, run_id, result, moves, timestamp
         """
@@ -342,7 +344,7 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_errors_for_run(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+    def fetch_errors_for_run(obj_db: WorkWithDB, run_id: int):
         """return errors for this run_id:
         - error_id, run_id, timestamp, error_message, traceback
         """
@@ -354,7 +356,7 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def summary_fitness_trend(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+    def summary_fitness_trend(obj_db: WorkWithDB, run_id: int):
         """ for each generation of a given run_id return:
         - generations.ga_id,
         - generations.generations (generation number),
@@ -370,25 +372,28 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_run_overview(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+    def fetch_run_overview(obj_db: WorkWithDB, run_id: int):
         """ returns summarized run information
           run id start time seed;
           number of generations ga parameters (p_crossover, p_mutation etc.);
           total statistics of games: wins, draws, losses, total games;
         """
         return obj_db.cur.execute("""SELECT runs.run_id, runs.time_run, runs.seed,  
-        generations.population_size, generations.p_crossover, generations.p_mutation, 
-        generations.eta, generations.low, generations.up,
-        games.result, games.moves, games.timestamp
+        g.population_size, g.p_crossover, g.p_mutation, g.eta, g.low, g.up,
+        COUNT(gs.game_id) AS total_games, SUM(CASE WHEN gs.result == "win"  THEN 1 ELSE 0 END) AS wins,
+        SUM(CASE WHEN gs.result='draw' THEN 1 ELSE 0 END) AS draws,
+        SUM(CASE WHEN gs.result='loss' THEN 1 ELSE 0 END) AS losses,
+        AVG(gs.moves) AS avg_moves
         FROM runs
-        JOIN generations ON runs.run_id == generations.run_id
-        JOIN games ON runs.run_id == games.run_id
+        LEFT JOIN generations AS g ON runs.run_id == g.run_id
+        LEFT JOIN games as gs ON runs.run_id == gs.run_id
         WHERE runs.run_id == ?
-        """, (run_id, ))
+        GROUP BY runs.run_id
+        """, (run_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_generation_detailed(obj_db: WorkWithDB, ga_id: int) -> sq.Cursor:
+    def fetch_generation_detailed(obj_db: WorkWithDB, ga_id: int):
         """ Returns the details of a specific generation:
           Generation and statistics parameters (fitness, etc.);
           Top 3 Chromosomes from the Fitness Hall of Fame in descending order;
@@ -396,7 +401,7 @@ class ReadDataTables:
         return obj_db.cur.execute(""" SELECT generations.population_size, generations.p_crossover, 
         generations.p_mutation, generations.eta, generations.low, generations.up,
         generation_stats.fitness_max, generation_stats.fitness_avg, 
-        generation_stats.fitness_max, generation_stats.fitness_avg,
+        generation_stats.fitness_min, generation_stats.fitness_std, 
         hall_of_fame.fitness
         FROM generations
         JOIN generation_stats ON generations.ga_id == generation_stats.gen_id
@@ -404,39 +409,39 @@ class ReadDataTables:
         WHERE generations.ga_id == ?
         ORDER BY hall_of_fame.fitness DESC
         LIMIT 3
-        """, (ga_id, ))
+        """, (ga_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_config_performance(obj_db: WorkWithDB, config_id: int) -> sq.Cursor:
+    def fetch_config_performance(obj_db: WorkWithDB, config_id: int):
         """ Returns the performance of a single model configuration across generations:
            fitness_max, fitness_avg, etc. for each iteration (gen_id);
         """
-        return obj_db.cur.execute(""" SELECT generation_stats.fitness_max, generation_stats.fitness_avg, 
-        generation_stats.fitness_max, generation_stats.fitness_avg,
+        return obj_db.cur.execute(""" SELECT gs.gen_id, gs.fitness_max, gs.fitness_avg, gs.fitness_min, gs.fitness_std, 
         model_config.gru_units, model_config.gru_activation
-        FROM generation_stats
+        FROM generation_stats as gs
         JOIN model_configs ON generation_stats.config_id == model_configs.config_id
         WHERE model_configs.config_id == ?
-        """, (config_id, ))
+        ORDER BY gs.gen_id ASC
+        """, (config_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_error_summary(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+    def fetch_error_summary(obj_db: WorkWithDB, run_id: int):
         """ Returns a list of errors that occurred in this run:
             timestamp, error message, traceback
         """
         return obj_db.cur.execute(""" SELECT timestamp, error_message, traceback FROM errors
         WHERE run_id == ?
-        """, (run_id, ))
+        """, (run_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_game_statistics(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+    def fetch_game_statistics(obj_db: WorkWithDB, run_id: int):
         """ Returns game statistics from the run:
             Game ID, result, number of moves;
             as well as aggregates: average number of moves, total wins, draws, losses;
         """
         return obj_db.cur.execute(""" SELECT game_id, result, moves, timestamp FROM games
         WHERE run_id == ?
-        """, (run_id, ))
+        """, (run_id,))
