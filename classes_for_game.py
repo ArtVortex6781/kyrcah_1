@@ -118,7 +118,7 @@ class TicTacToe:
                     break
 
                 if nc2 is not None:
-                    i2, j2 = self.__help_for_predict(nc2.predict())
+                    i2, j2 = self.__help_for_predict(nc2)
                     if self[i2, j2] in (self.FIRST_NC, self.SECOND_NC):
                         self[self.__rand_cl()] = self.SECOND_NC
                     else:

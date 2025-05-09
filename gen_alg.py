@@ -1,14 +1,13 @@
 from datetime import datetime
 import matplotlib
 import numpy.random
-from deap import base
-from deap import creator
-from deap import tools
+from deap import base, creator, tools
 import matplotlib.pyplot as plt
 import algelitism
 import random
 import numpy as np
 from logs import WorkWithDB, RecordingInTable, ResetTables
+import keras
 
 from classes_for_game import TicTacToe
 from ns_keras import game_model1, change_weights, save_model, neir_c_1lvl
@@ -35,6 +34,8 @@ SEED = random.getrandbits(32)
 random.seed(SEED)
 numpy.random.seed(SEED)
 
+game_test_model: keras.Sequential = keras.models.load_model(r"models\modelv6_3igr.keras")
+
 hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
 
 creator.create("FitnessMax", base.Fitness, weights = (1.0,))
@@ -52,7 +53,7 @@ def get_score(individual):
     game_model1.set_weights(change_weights(individual))
 
     pole = TicTacToe()
-    reward = pole.game_2nc(game_model1)
+    reward = pole.game_2nc(game_model1, count_games = 5, nc2 = game_test_model)
     return reward,
 
 
@@ -111,4 +112,4 @@ with WorkWithDB() as db:
     plt.show()
 
     save_model.set_weights(change_weights(best))
-    save_model.save(r"models\modelv6_3igr.keras")
+    save_model.save(r"models\modelv1_5igr.keras")
