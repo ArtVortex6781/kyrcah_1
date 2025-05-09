@@ -73,7 +73,7 @@ class WorkWithDB:
                     try:
                         db.cur.execute(
                             "INSERT INTO errors (run_id, timestamp, error_message, traceback) VALUES (?, ?, ?, ?)",
-                            (getattr(db.cur, "current_run_id", None), datetime.now().isoformat(), str(e),
+                            (getattr(db, "current_run_id", None), datetime.now().isoformat(), str(e),
                              repr(e.__traceback__)))
                         db.con.commit()
                     except Exception as all_e:
@@ -420,7 +420,7 @@ class ReadDataTables:
         return obj_db.cur.execute(""" SELECT gs.gen_id, gs.fitness_max, gs.fitness_avg, gs.fitness_min, gs.fitness_std, 
         model_config.gru_units, model_config.gru_activation
         FROM generation_stats as gs
-        JOIN model_configs ON generation_stats.config_id == model_configs.config_id
+        JOIN model_configs ON gs.config_id == model_configs.config_id
         WHERE model_configs.config_id == ?
         ORDER BY gs.gen_id ASC
         """, (config_id,))
