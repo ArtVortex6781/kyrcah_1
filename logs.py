@@ -367,3 +367,76 @@ class ReadDataTables:
         JOIN generation_stats ON generations.ga_id = generation_stats.gen_id
         WHERE generations.run_id == ?
         """, (run_id,))
+
+    @staticmethod
+    @WorkWithDB.dict_output
+    def fetch_run_overview(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+        """ returns summarized run information
+          run id start time seed;
+          number of generations ga parameters (p_crossover, p_mutation etc.);
+          total statistics of games: wins, draws, losses, total games;
+        """
+        return obj_db.cur.execute("""SELECT runs.run_id, runs.time_run, runs.seed,  
+        generations.population_size, generations.p_crossover, generations.p_mutation, 
+        generations.eta, generations.low, generations.up,
+        games.result, games.moves, games.timestamp
+        FROM runs
+        JOIN generations ON runs.run_id == generations.run_id
+        JOIN games ON runs.run_id == games.run_id
+        WHERE runs.run_id == ?
+        """, (run_id, ))
+
+    @staticmethod
+    @WorkWithDB.dict_output
+    def fetch_generation_detailed(obj_db: WorkWithDB, ga_id: int) -> sq.Cursor:
+        """ Returns the details of a specific generation:
+          Generation and statistics parameters (fitness, etc.);
+          Top 3 Chromosomes from the Fitness Hall of Fame in descending order;
+        """
+        return obj_db.cur.execute(""" SELECT generations.population_size, generations.p_crossover, 
+        generations.p_mutation, generations.eta, generations.low, generations.up,
+        generation_stats.fitness_max, generation_stats.fitness_avg, 
+        generation_stats.fitness_max, generation_stats.fitness_avg,
+        hall_of_fame.fitness
+        FROM generations
+        JOIN generation_stats ON generations.ga_id == generation_stats.gen_id
+        JOIN hall_of_fame ON hall_of_fame.gen_id == generations.ga_id
+        WHERE generations.ga_id == ?
+        ORDER BY hall_of_fame.fitness DESC
+        LIMIT 3
+        """, (ga_id, ))
+
+    @staticmethod
+    @WorkWithDB.dict_output
+    def fetch_config_performance(obj_db: WorkWithDB, config_id: int) -> sq.Cursor:
+        """ Returns the performance of a single model configuration across generations:
+           fitness_max, fitness_avg, etc. for each iteration (gen_id);
+        """
+        return obj_db.cur.execute(""" SELECT generation_stats.fitness_max, generation_stats.fitness_avg, 
+        generation_stats.fitness_max, generation_stats.fitness_avg,
+        model_config.gru_units, model_config.gru_activation
+        FROM generation_stats
+        JOIN model_configs ON generation_stats.config_id == model_configs.config_id
+        WHERE model_configs.config_id == ?
+        """, (config_id, ))
+
+    @staticmethod
+    @WorkWithDB.dict_output
+    def fetch_error_summary(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+        """ Returns a list of errors that occurred in this run:
+            timestamp, error message, traceback
+        """
+        return obj_db.cur.execute(""" SELECT timestamp, error_message, traceback FROM errors
+        WHERE run_id == ?
+        """, (run_id, ))
+
+    @staticmethod
+    @WorkWithDB.dict_output
+    def fetch_game_statistics(obj_db: WorkWithDB, run_id: int) -> sq.Cursor:
+        """ Returns game statistics from the run:
+            Game ID, result, number of moves;
+            as well as aggregates: average number of moves, total wins, draws, losses;
+        """
+        return obj_db.cur.execute(""" SELECT game_id, result, moves, timestamp FROM games
+        WHERE run_id == ?
+        """, (run_id, ))
