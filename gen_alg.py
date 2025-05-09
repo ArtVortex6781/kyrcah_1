@@ -33,6 +33,7 @@ GRU_ACTIVATION = "relu"
 
 SEED = random.getrandbits(32)
 random.seed(SEED)
+numpy.random.seed(SEED)
 
 hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
 
