@@ -19,22 +19,25 @@ LENGTH_CHROM = 8_709
 
 LOW = -1.0
 UP = 1.0
-ETA = 22
+ETA = 20
 
-POPULATION_SIZE = 56  # количество индивидуумов в популяции
+POPULATION_SIZE = 60  # количество индивидуумов в популяции
 P_CROSSOVER = 0.9  # вероятность скрещивания
 P_MUTATION = 0.15  # вероятность мутации индивидуума
-MAX_GENERATIONS = 46  # максимальное количество поколений
+MAX_GENERATIONS = 45  # максимальное количество поколений
 HALL_OF_FAME_SIZE = 3
 
 GRU_UNITS = neir_c_1lvl
 GRU_ACTIVATION = "relu"
+
+COUNT_GAMES = 5
 
 SEED = random.getrandbits(32)
 random.seed(SEED)
 numpy.random.seed(SEED)
 
 game_test_model: keras.Sequential = keras.models.load_model(r"models\modelv6_3igr.keras")
+ENEMY = "modelv6_3igr"
 
 hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
 
@@ -53,7 +56,7 @@ def get_score(individual):
     game_model1.set_weights(change_weights(individual))
 
     pole = TicTacToe()
-    reward = pole.game_2nc(game_model1, count_games = 5, nc2 = game_test_model)
+    reward = pole.game_2nc(game_model1, count_games = COUNT_GAMES, nc2 = game_test_model)
     return reward,
 
 
@@ -66,6 +69,7 @@ with WorkWithDB() as db:
     time_run = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     run_id = RecordingInTable.insert_run(db, time_run, SEED)
+    run_metadata_id = RecordingInTable.insert_run_metadata(db, run_id, COUNT_GAMES, ENEMY)
     ga_id = RecordingInTable.insert_generation(
         db, run_id, POPULATION_SIZE, P_CROSSOVER, P_MUTATION, LOW, UP, ETA, MAX_GENERATIONS, HALL_OF_FAME_SIZE
     )
@@ -112,4 +116,4 @@ with WorkWithDB() as db:
     plt.show()
 
     save_model.set_weights(change_weights(best))
-    save_model.save(r"models\modelv1_5igr.keras")
+    save_model.save(r"models\modelv2_5igr.keras")
