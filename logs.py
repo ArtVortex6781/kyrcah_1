@@ -173,6 +173,12 @@ class ResetTables:
                 timestamp TEXT,
                 error_message TEXT,
                 traceback TEXT
+                )""",
+                "run_metadata": """ CREATE TABLE IF NOT EXISTS run_metadata (
+                meta_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id INTEGER ,
+                count_games  INTEGER,
+                enemy TEXT,
                 )"""}
 
     @classmethod
@@ -207,6 +213,12 @@ class RecordingInTable:
         obj_db.cur.execute("INSERT INTO runs (time_run, seed) VALUES (?, ?)", (time_run, seed))
 
         obj_db.current_run_id = obj_db.cur.lastrowid
+        return obj_db.cur.lastrowid
+
+    @staticmethod
+    def insert_run_metadata(obj_db: WorkWithDB, run_id: int, count_games: int, enemy: str):
+        obj_db.cur.execute("INSERT INTO run_metadata (run_id, count_games, enemy) VALUES (?, ?, ?)",
+                           (run_id, count_games, enemy))
         return obj_db.cur.lastrowid
 
     @staticmethod
@@ -344,6 +356,29 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
+    def fetch_run_metadata(obj_db: WorkWithDB, run_id: int):
+        """ Return metadata for this run:
+         meta_id, run_id, count_games, enemy
+        """
+        return obj_db.cur.execute("SELECT * FROM run_metadata WHERE run_id == ?", (run_id,))
+
+    @staticmethod
+    @WorkWithDB.dict_output
+    def fetch_run_with_metadata(obj_db: WorkWithDB, run_id: int):
+        """
+        For each run returns:
+        - run_id, time_run, seed, count_games, enemy
+        """
+        return obj_db.cur.execute(""" SELECT r.run_id, r.time_run, r.seed,
+        m.count_games, m.enemy
+        FROM runs AS r
+        LEFT JOIN run_metadata AS m ON r.run_id == m.run_id
+        WHERE run_id == ?
+        ORDER BY r.run_id
+        """, (run_id, ))
+
+    @staticmethod
+    @WorkWithDB.dict_output
     def fetch_errors_for_run(obj_db: WorkWithDB, run_id: int):
         """return errors for this run_id:
         - error_id, run_id, timestamp, error_message, traceback
@@ -378,7 +413,8 @@ class ReadDataTables:
           number of generations ga parameters (p_crossover, p_mutation etc.);
           total statistics of games: wins, draws, losses, total games;
         """
-        return obj_db.cur.execute("""SELECT runs.run_id, runs.time_run, runs.seed,  
+        return obj_db.cur.execute("""SELECT runs.run_id, runs.time_run, runs.seed,
+        r_m.count_games, r_m.enemy,
         g.population_size, g.p_crossover, g.p_mutation, g.eta, g.low, g.up,
         COUNT(gs.game_id) AS total_games, SUM(CASE WHEN gs.result == "win"  THEN 1 ELSE 0 END) AS wins,
         SUM(CASE WHEN gs.result='draw' THEN 1 ELSE 0 END) AS draws,
@@ -387,6 +423,7 @@ class ReadDataTables:
         FROM runs
         LEFT JOIN generations AS g ON runs.run_id == g.run_id
         LEFT JOIN games as gs ON runs.run_id == gs.run_id
+        LEFT JOIN run_metadata AS r_m ON runs.run_id == r_m.run_id
         WHERE runs.run_id == ?
         GROUP BY runs.run_id
         """, (run_id,))
