@@ -178,7 +178,7 @@ class ResetTables:
                 meta_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 run_id INTEGER ,
                 count_games  INTEGER,
-                enemy TEXT,
+                enemy TEXT
                 )"""}
 
     @classmethod
@@ -373,7 +373,7 @@ class ReadDataTables:
         m.count_games, m.enemy
         FROM runs AS r
         LEFT JOIN run_metadata AS m ON r.run_id == m.run_id
-        WHERE run_id == ?
+        WHERE r.run_id == ?
         ORDER BY r.run_id
         """, (run_id, ))
 
