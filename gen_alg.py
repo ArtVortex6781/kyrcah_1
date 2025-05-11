@@ -36,7 +36,7 @@ SEED = random.getrandbits(32)
 random.seed(SEED)
 numpy.random.seed(SEED)
 
-name_model = "modelv6_3igr"
+name_model = "modelv1_5igr"
 game_test_model: keras.Sequential = keras.models.load_model(fr"models\{name_model}.keras")
 ENEMY = name_model
 del name_model
@@ -72,9 +72,8 @@ with WorkWithDB() as db:
 
     run_id = RecordingInTable.insert_run(db, time_run, SEED)
     run_metadata_id = RecordingInTable.insert_run_metadata(db, run_id, COUNT_GAMES, ENEMY)
-    ga_id = RecordingInTable.insert_generation(
-        db, run_id, POPULATION_SIZE, P_CROSSOVER, P_MUTATION, LOW, UP, ETA, MAX_GENERATIONS, HALL_OF_FAME_SIZE
-    )
+    ga_id = RecordingInTable.insert_generation(db, run_id, POPULATION_SIZE, P_CROSSOVER, P_MUTATION, LOW, UP, ETA,
+                                               MAX_GENERATIONS, HALL_OF_FAME_SIZE)
     config_id = RecordingInTable.insert_model_config(db, run_id, GRU_UNITS, GRU_ACTIVATION)
 
     stats = tools.Statistics(lambda ind: ind.fitness.values[0])
@@ -92,13 +91,11 @@ with WorkWithDB() as db:
                                                      verbose = True)
 
     for gen_data in logbook:
-        RecordingInTable.insert_generation_stats(
-            db, gen_id = ga_id, config_id = config_id,
-            fitness_max = gen_data["max"],
-            fitness_avg = gen_data["avg"],
-            fitness_min = gen_data["min"],
-            fitness_std = gen_data["std"]
-        )
+        RecordingInTable.insert_generation_stats(db, gen_id = ga_id, config_id = config_id,
+                                                 fitness_max = gen_data["max"], fitness_avg = gen_data["avg"],
+                                                 fitness_min = gen_data["min"],
+                                                 fitness_std = gen_data["std"]
+                                                 )
 
     for ind in hof:
         fitness = ind.fitness.values[0]
