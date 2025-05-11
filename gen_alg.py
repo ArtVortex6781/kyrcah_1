@@ -36,8 +36,10 @@ SEED = random.getrandbits(32)
 random.seed(SEED)
 numpy.random.seed(SEED)
 
-game_test_model: keras.Sequential = keras.models.load_model(r"models\modelv6_3igr.keras")
-ENEMY = "modelv6_3igr"
+name_model = "modelv6_3igr"
+game_test_model: keras.Sequential = keras.models.load_model(fr"models\{name_model}.keras")
+ENEMY = name_model
+del name_model
 
 hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
 
