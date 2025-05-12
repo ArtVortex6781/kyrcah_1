@@ -77,9 +77,6 @@ class TicTacToe:
     def reset_pole(self):
         self.__init__()
 
-    def reward_step(self, i: int, j: int) -> tuple[int, int, bool]:
-        pass
-
     def game_2nc(self, nc1: Sequential, nc2: Sequential | None = None, count_games: int = 3) -> int:
         """for GA with one or two nc
         :param nc1: нс которая оценивается
@@ -104,16 +101,6 @@ class TicTacToe:
                 else:
                     self[i1, j1] = self.FIRST_NC
                     rew_fire += 1
-
-                # r_st, flag_win, rand_do = self.reward_step(i1, j1)
-                #
-                # if rand_do:
-                #     self[self.__rand_cl()] = self.FIRST_NC
-                #     if not self:
-                #         flag_win = 0
-                #         break
-                #     self[self.__rand_cl()] = self.SECOND_NC
-                #     continue
 
                 if not self:
                     break
