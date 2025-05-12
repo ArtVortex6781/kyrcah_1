@@ -92,7 +92,6 @@ class TicTacToe:
             while self:
                 i1, j1 = self.__help_for_predict(nc1)
                 if self[i1, j1] != self.FREE_CELL:
-                    reward -= 6
                     count_help += 1
                     flag_win = 0
                     self[self.__rand_cl()] = self.FIRST_NC
@@ -113,16 +112,14 @@ class TicTacToe:
                         self[i2, j2] = self.SECOND_NC
                 else:
                     self[self.__rand_cl()] = self.SECOND_NC
-
+            reward += rew_fire - count_help * 4
             if self.is_first_win:
                 if flag_win == 1:
-                    reward += 6 + rew_fire // 2
-                else:
-                    reward += rew_fire // 2 - count_help * 2
+                    reward += 6 + rew_fire
             elif self.is_draw:
-                reward -= 3 - count_help * 2
+                reward -= 4
             else:
-                reward -= 6 - count_help * 2
+                reward -= 8
 
         return reward
 
