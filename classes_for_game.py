@@ -112,14 +112,14 @@ class TicTacToe:
                         self[i2, j2] = self.SECOND_NC
                 else:
                     self[self.__rand_cl()] = self.SECOND_NC
-            reward += rew_fire - count_help * 4
+            reward += rew_fire - count_help * 8
             if self.is_first_win:
                 if flag_win == 1:
                     reward += 6 + rew_fire
             elif self.is_draw:
-                reward -= 4
+                reward -= 5
             else:
-                reward -= 8
+                reward -= 10
 
         return reward
 
