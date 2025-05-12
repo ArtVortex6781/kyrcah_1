@@ -21,7 +21,7 @@ class Cell:
 
 
 class TicTacToe:
-    FREE_CELL = 10  # свободная клетка
+    FREE_CELL = 35  # свободная клетка
     FIRST_NC = 2  # крестик (1nc - человек)
     SECOND_NC = 3  # нолик (2nc - компьютер)
 
