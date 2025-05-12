@@ -133,9 +133,9 @@ class TicTacToe:
                 else:
                     reward += rew_fire // 2 - count_help * 2
             elif self.is_draw:
-                reward -= 3
+                reward -= 3 - count_help * 2
             else:
-                reward -= 6
+                reward -= 6 - count_help * 2
 
         return reward
 
