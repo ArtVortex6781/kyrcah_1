@@ -129,13 +129,13 @@ class TicTacToe:
 
             if self.is_first_win:
                 if flag_win == 1:
-                    reward += 6 + rew_fire
+                    reward += 6 + rew_fire // 2
                 else:
-                    reward += rew_fire - count_help * 2
+                    reward += rew_fire // 2 - count_help * 2
             elif self.is_draw:
-                reward -= 2
+                reward -= 3
             else:
-                reward -= 4
+                reward -= 6
 
         return reward
 
