@@ -36,7 +36,7 @@ SEED = random.getrandbits(32)
 random.seed(SEED)
 numpy.random.seed(SEED)
 
-name_model = "modelv1_5igr"
+name_model = "modelv3_5igr"
 game_test_model: keras.Sequential = keras.models.load_model(fr"models\{name_model}.keras")
 ENEMY = name_model
 del name_model
@@ -77,10 +77,10 @@ with WorkWithDB() as db:
     config_id = RecordingInTable.insert_model_config(db, run_id, GRU_UNITS, GRU_ACTIVATION)
 
     stats = tools.Statistics(lambda ind: ind.fitness.values[0])
-    stats.register("avg", lambda x: sum(x) / len(x))
-    stats.register("min", min)
-    stats.register("max", max)
-    stats.register("std", lambda x: (sum((xi - sum(x) / len(x)) ** 2 for xi in x) / len(x)) ** 0.5)
+    stats.register("avg", np.mean)
+    stats.register("min", np.min)
+    stats.register("max", np.max)
+    stats.register("std", np.std)
 
     population, logbook = algelitism.eaSimpleElitism(population, toolbox,
                                                      cxpb = P_CROSSOVER,
@@ -115,4 +115,4 @@ with WorkWithDB() as db:
     plt.show()
 
     save_model.set_weights(change_weights(best))
-    save_model.save(r"models\modelv2_5igr.keras")
+    save_model.save(r"models\modelv4_5igr.keras")
