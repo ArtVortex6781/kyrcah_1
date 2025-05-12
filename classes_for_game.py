@@ -21,7 +21,7 @@ class Cell:
 
 
 class TicTacToe:
-    FREE_CELL = 35  # свободная клетка
+    FREE_CELL = 45  # свободная клетка
     FIRST_NC = 2  # крестик (1nc - человек)
     SECOND_NC = 3  # нолик (2nc - компьютер)
 
@@ -92,7 +92,7 @@ class TicTacToe:
             while self:
                 i1, j1 = self.__help_for_predict(nc1)
                 if self[i1, j1] != self.FREE_CELL:
-                    count_help += 1
+                    count_help += 2
                     flag_win = 0
                     self[self.__rand_cl()] = self.FIRST_NC
                     if not self:
@@ -112,6 +112,7 @@ class TicTacToe:
                         self[i2, j2] = self.SECOND_NC
                 else:
                     self[self.__rand_cl()] = self.SECOND_NC
+
             reward += rew_fire - count_help * 8
             if self.is_first_win:
                 if flag_win == 1:
