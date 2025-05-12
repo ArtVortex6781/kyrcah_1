@@ -7,7 +7,7 @@ def change_weights(raw_w: list):
     """changes a list of numbers with 1 axis, btw for game_modelX, x - number of nc
     :param raw_w: raw weights
     """
-    base_shapes = [(3, 150), (50, 150), (2, 150), (50, 9), (9,)]
+    base_shapes = [(3, 192), (64, 192), (2, 192), (64, 9), (9,)]
     raw_w = np.array(raw_w)
     weights = []
 
@@ -20,7 +20,7 @@ def change_weights(raw_w: list):
     return weights
 
 
-neir_c_1lvl = 50
+neir_c_1lvl = 64
 
 game_model1 = Sequential([Input((3, 3)),
                           GRU(neir_c_1lvl, activation = "relu"),
@@ -31,7 +31,7 @@ game_model2 = Sequential([Input((3, 3)),
                           Dense(9, activation = 'softmax')])
 
 game_model1.build(9)
-"8,709"
+"13,833"
 game_model2.build(9)
 
 # print([x.shape for x in game_model1.get_weights()])
