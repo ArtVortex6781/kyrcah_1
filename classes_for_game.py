@@ -92,7 +92,7 @@ class TicTacToe:
             while self:
                 i1, j1 = self.__help_for_predict(nc1)
                 if self[i1, j1] != self.FREE_CELL:
-                    count_help += 2
+                    count_help += 1
                     flag_win = 0
                     self[self.__rand_cl()] = self.FIRST_NC
                     if not self:
@@ -113,7 +113,7 @@ class TicTacToe:
                 else:
                     self[self.__rand_cl()] = self.SECOND_NC
 
-            reward += rew_fire - count_help * 8
+            reward += rew_fire - count_help * 14
             if self.is_first_win:
                 if flag_win == 1:
                     reward += 12
@@ -160,3 +160,27 @@ class TicTacToe:
             print("none win")
         else:
             print("ez win")
+
+    def game_nc_with_nc(self, nc1: Sequential, nc2: Sequential):
+        while self:
+            i1, j1 = self.__help_for_predict(nc1)
+            if self[i1, j1] == self.FREE_CELL:
+                self[i1, j1] = self.FIRST_NC
+            print(f"xod nc1 - ({i1}, {j1})")
+            self.show()
+            if not self:
+                break
+
+            i2, j2 = self.__help_for_predict(nc2)
+            if self[i2, j2] == self.FREE_CELL:
+                self[i2, j2] = self.SECOND_NC
+            print(f"xod nc2 - ({i2}, {j2})")
+            self.show()
+
+
+        if self.is_first_win:
+            print("nc1 win")
+        elif self.is_draw:
+            print("none win")
+        else:
+            print("nc2 win")
