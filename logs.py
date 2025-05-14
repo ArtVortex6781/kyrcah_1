@@ -160,13 +160,6 @@ class ResetTables:
             fitness REAL,
             chromosome TEXT
             )""",
-                "games": """ CREATE TABLE IF NOT EXISTS games (
-                game_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                run_id INTEGER,
-                result TEXT,
-                moves INTEGER,
-                timestamp TEXT
-                )""",
                 "errors": """ CREATE TABLE IF NOT EXISTS errors (
                 error_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 run_id INTEGER,
@@ -264,15 +257,6 @@ class RecordingInTable:
         return obj_db.cur.lastrowid
 
     @staticmethod
-    def insert_game(obj_db: WorkWithDB, run_id: int, result: str, moves: int, timestamp: str) -> int:
-        """ Adds a record to games and returns the new game_id """
-        obj_db.cur.execute(
-            "INSERT INTO games (run_id, result, moves, timestamp) VALUES (?, ?, ?, ?)",
-            (run_id, result, moves, timestamp)
-        )
-        return obj_db.cur.lastrowid
-
-    @staticmethod
     def insert_error(obj_db: WorkWithDB, run_id: int | None, timestamp: str, error_message: str, traceback: str) -> int:
         """ Adds a record to errors and returns the new error_id """
         obj_db.cur.execute(
@@ -344,18 +328,6 @@ class ReadDataTables:
 
     @staticmethod
     @WorkWithDB.dict_output
-    def fetch_games_for_run(obj_db: WorkWithDB, run_id: int):
-        """ return the results of the games for the run_id:
-        game_id, run_id, result, moves, timestamp
-        """
-
-        return obj_db.cur.execute("""
-        SELECT * FROM games
-        WHERE run_id == ?
-        """, (run_id,))
-
-    @staticmethod
-    @WorkWithDB.dict_output
     def fetch_run_metadata(obj_db: WorkWithDB, run_id: int):
         """ Return metadata for this run:
          meta_id, run_id, count_games, enemy
@@ -375,7 +347,7 @@ class ReadDataTables:
         LEFT JOIN run_metadata AS m ON r.run_id == m.run_id
         WHERE r.run_id == ?
         ORDER BY r.run_id
-        """, (run_id, ))
+        """, (run_id,))
 
     @staticmethod
     @WorkWithDB.dict_output
@@ -416,13 +388,8 @@ class ReadDataTables:
         return obj_db.cur.execute("""SELECT runs.run_id, runs.time_run, runs.seed,
         r_m.count_games, r_m.enemy,
         g.population_size, g.p_crossover, g.p_mutation, g.eta, g.low, g.up,
-        COUNT(gs.game_id) AS total_games, SUM(CASE WHEN gs.result == "win"  THEN 1 ELSE 0 END) AS wins,
-        SUM(CASE WHEN gs.result='draw' THEN 1 ELSE 0 END) AS draws,
-        SUM(CASE WHEN gs.result='loss' THEN 1 ELSE 0 END) AS losses,
-        AVG(gs.moves) AS avg_moves
         FROM runs
         LEFT JOIN generations AS g ON runs.run_id == g.run_id
-        LEFT JOIN games as gs ON runs.run_id == gs.run_id
         LEFT JOIN run_metadata AS r_m ON runs.run_id == r_m.run_id
         WHERE runs.run_id == ?
         GROUP BY runs.run_id
