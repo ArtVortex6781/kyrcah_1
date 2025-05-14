@@ -8,7 +8,6 @@ import random
 import numpy as np
 from logs import WorkWithDB, RecordingInTable
 import keras
-
 from classes_for_game import TicTacToe
 from ns_keras import game_model1, change_weights, save_model, neir_c_1lvl
 
