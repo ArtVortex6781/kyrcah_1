@@ -15,16 +15,16 @@ from ns_keras import game_model1, change_weights, save_model, neir_c_1lvl
 matplotlib.use("TkAgg")
 
 # константы генетического алгоритма
-LENGTH_CHROM = 8_709
+LENGTH_CHROM = 13_833
 
 LOW = -1.0
 UP = 1.0
 ETA = 20
 
-POPULATION_SIZE = 60  # количество индивидуумов в популяции
+POPULATION_SIZE = 42  # количество индивидуумов в популяции
 P_CROSSOVER = 0.9  # вероятность скрещивания
 P_MUTATION = 0.15  # вероятность мутации индивидуума
-MAX_GENERATIONS = 45  # максимальное количество поколений
+MAX_GENERATIONS = 39  # максимальное количество поколений
 HALL_OF_FAME_SIZE = 3
 
 GRU_UNITS = neir_c_1lvl
@@ -36,7 +36,7 @@ SEED = random.getrandbits(32)
 random.seed(SEED)
 numpy.random.seed(SEED)
 
-name_model = "modelv3_5igr"
+name_model = "modelv8_5igr"
 game_test_model: keras.Sequential = keras.models.load_model(fr"models\{name_model}.keras")
 ENEMY = name_model
 del name_model
@@ -89,7 +89,6 @@ with WorkWithDB() as db:
                                                      stats = stats,
                                                      halloffame = hof,
                                                      verbose = True)
-
     for gen_data in logbook:
         RecordingInTable.insert_generation_stats(db, gen_id = ga_id, config_id = config_id,
                                                  fitness_max = gen_data["max"], fitness_avg = gen_data["avg"],
@@ -115,4 +114,4 @@ with WorkWithDB() as db:
     plt.show()
 
     save_model.set_weights(change_weights(best))
-    save_model.save(r"models\modelv4_5igr.keras")
+    save_model.save(r"models\modelv9_5igr.keras")
