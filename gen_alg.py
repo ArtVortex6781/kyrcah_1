@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import algelitism
 import random
 import numpy as np
-from logs import WorkWithDB, RecordingInTable, ResetTables
+from logs import WorkWithDB, RecordingInTable
 import keras
 
 from classes_for_game import TicTacToe
