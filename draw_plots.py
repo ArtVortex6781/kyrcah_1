@@ -1,9 +1,14 @@
-from logs import WorkWithDB, ReadDataTables
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
+from pathlib import Path
 
-matplotlib.use('TkAgg')
+import matplotlib
+matplotlib.use("TkAgg")
+import matplotlib.pyplot as plt
+import numpy as np
+
+from logs import WorkWithDB, ReadDataTables
+
+
+PLOTS_DIR = Path(__file__).resolve().parent / "plots"
 
 
 def fitness_trend_run17():
@@ -30,7 +35,8 @@ def fitness_trend_run17():
     plt.xlabel("Поколение")
     plt.ylabel("Приспособленность")
 
-    plt.savefig(r"plots/fitness_trend_run17.png")
+    PLOTS_DIR.mkdir(parents=True, exist_ok=True)
+    plt.savefig(PLOTS_DIR / "fitness_trend_run17.png")
 
 
 def fitness_std_run17():
@@ -53,4 +59,5 @@ def fitness_std_run17():
     plt.xlabel("Поколение")
     plt.ylabel("Значения СКО")
 
-    plt.savefig(r"plots/fitness_std_run17.png")
+    PLOTS_DIR.mkdir(parents=True, exist_ok=True)
+    plt.savefig(PLOTS_DIR / "fitness_std_run17.png")

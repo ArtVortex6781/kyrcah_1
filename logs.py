@@ -4,6 +4,10 @@ from typing import Callable
 from functools import wraps
 from types import FunctionType
 from datetime import datetime
+from pathlib import Path
+
+
+DB_DIR = Path(__file__).resolve().parent / "database_logs"
 
 
 class WorkWithDB:
@@ -16,7 +20,8 @@ class WorkWithDB:
         if cls._instance is None:
             cls._instance = object.__new__(cls)
             try:
-                cls._instance.con = sq.connect("database_logs/db1.db")
+                DB_DIR.mkdir(parents=True, exist_ok=True)
+                cls._instance.con = sq.connect(DB_DIR / "db1.db")
                 cls._instance.cur = cls._instance.con.cursor()
             except sq.Error as e:
                 print("error connect with db")

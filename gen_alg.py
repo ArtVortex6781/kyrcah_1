@@ -1,17 +1,22 @@
 from datetime import datetime
+from pathlib import Path
 import matplotlib
 import numpy.random
 from deap import base, creator, tools
-import matplotlib.pyplot as plt
 import algelitism
 import random
 import numpy as np
 from logs import WorkWithDB, RecordingInTable
 import keras
+
+matplotlib.use("TkAgg")
+import matplotlib.pyplot as plt
+
 from classes_for_game import TicTacToe
 from ns_keras import game_model1, change_weights, save_model, neir_c_1lvl
 
-matplotlib.use("TkAgg")
+BASE_DIR = Path(__file__).resolve().parent
+MODELS_DIR = BASE_DIR / "models"
 
 # константы генетического алгоритма
 LENGTH_CHROM = 13_833
@@ -36,7 +41,7 @@ random.seed(SEED)
 numpy.random.seed(SEED)
 
 name_model = "modelv7_5igr"
-game_test_model: keras.Sequential = keras.models.load_model(fr"models\{name_model}.keras")
+game_test_model: keras.Sequential = keras.models.load_model(MODELS_DIR / f"{name_model}.keras")
 ENEMY = name_model
 del name_model
 
@@ -113,4 +118,5 @@ with WorkWithDB() as db:
     plt.show()
 
     save_model.set_weights(change_weights(best))
-    save_model.save(r"models\modelv9_5igr.keras")
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    save_model.save(MODELS_DIR / "modelv9_5igr.keras")
