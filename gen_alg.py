@@ -35,7 +35,7 @@ SEED = random.getrandbits(32)
 random.seed(SEED)
 numpy.random.seed(SEED)
 
-name_model = "modelv8_5igr"
+name_model = "modelv7_5igr"
 game_test_model: keras.Sequential = keras.models.load_model(fr"models\{name_model}.keras")
 ENEMY = name_model
 del name_model
