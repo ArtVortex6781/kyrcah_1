@@ -1,0 +1,7 @@
+# Direct dependencies of the TicTacToe GA project.
+# Versions reflect the original development environment (Python 3.12 recommended).
+numpy==1.26.4
+deap==1.4.2
+keras==3.9.2
+tensorflow==2.19.0
+matplotlib==3.10.1
